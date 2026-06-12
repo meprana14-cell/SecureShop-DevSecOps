@@ -651,10 +651,10 @@ ssh -i "$KEY_NAME.pem" ubuntu@$JENKINS_IP
 
 ### 🐧 Linux / 🧠 macOS
 
-```powershell
+```bash
 # Variables
-$JENKINS_IP = "YOUR_JENKINS_PUBLIC_IP"
-$KEY_NAME = "Jenkins-key"
+JENKINS_IP="18.61.48.46"
+KEY_NAME="DeoriginLabs"
 
 # Navigate to PEM file location
 cd ~/Downloads   # or the directory where you saved the PEM file

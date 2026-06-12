@@ -479,8 +479,8 @@ echo "✅ SonarQube Server Security Group Created: $SG_ID_3"
 ```bash
 
 # Define variables
-$AMI_ID = "ami-05f6ea5de51175a06"
-$KEY_NAME = "jenkins-key"
+AMI_ID="ami-05f6ea5de51175a06"
+KEY_NAME="DeoriginLabs"
 ```
 
 ### 💻 Windows Powershell

@@ -480,7 +480,7 @@ echo "✅ SonarQube Server Security Group Created: $SG_ID_3"
 
 # Define variables
 AMI_ID="ami-05f6ea5de51175a06"
-KEY_NAME="DeoriginLabs"
+KEY_NAME="SecureShop"
 ```
 
 ### 💻 Windows Powershell
@@ -639,7 +639,7 @@ After creating your Jenkins EC2 instance, you can securely connect to it using t
 ```powershell
 # Variables
 $JENKINS_IP = "YOUR_JENKINS_PUBLIC_IP"
-$KEY_NAME = "Jenkins-key"
+$KEY_NAME = "SecureShop"
 
 # Change directory to where the PEM file is stored
 cd "C:\path\to\your\pem\file"
@@ -654,7 +654,7 @@ ssh -i "$KEY_NAME.pem" ubuntu@$JENKINS_IP
 ```bash
 # Variables
 JENKINS_IP="18.61.48.46"
-KEY_NAME="DeoriginLabs"
+KEY_NAME="SecureShop"
 
 # Navigate to PEM file location
 cd ~/Downloads   # or the directory where you saved the PEM file

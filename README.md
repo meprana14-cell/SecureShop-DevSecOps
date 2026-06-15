@@ -1178,16 +1178,16 @@ aws ecr create-repository \
   --repository-name $ECR_APP_NAME \
   --image-scanning-configuration scanOnPush=true \
   --encryption-configuration encryptionType=AES256 \
-  --region $AWS_REGION
+  --region $REGION
 ```
 ### 🧩  Verify the repository
 ```bash
-aws ecr describe-repositories --repository-names $ECR_APP_NAME --region $AWS_REGION
+aws ecr describe-repositories --repository-names $ECR_APP_NAME --region $REGION
 ```
 ### 🧰  Authenticate Docker to ECR
 ```bash
-aws ecr get-login-password --region $AWS_REGION \
-| docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+aws ecr get-login-password --region $REGION \
+| docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com
 ```
 
 ## ⚙️ Configure Jenkins

@@ -105,7 +105,7 @@ aws --version
 
 # Variables
 $REGION = "ap-south-2"
-$VPC_CIDR = "10.0.0.0/16"
+$VPC_CIDR = "192.168.0.0/16"
 $VPC_NAME = "Jenkins-EKS"
 
 # Create VPC
@@ -126,7 +126,7 @@ Write-Host "✅ VPC Created: $VPC_ID"
 # ✅ Public Subnet 1
 $PUB_SUBNET1 = (aws ec2 create-subnet `
   --vpc-id $VPC_ID `
-  --cidr-block 10.0.1.0/24 `
+  --cidr-block 192.168.1.0/24 `
   --availability-zone ap-south-2a `
   --query "Subnet.SubnetId" `
   --output text)
@@ -140,7 +140,7 @@ $PUB_SUBNET1 = (aws ec2 create-subnet `
 # ✅ Public Subnet 2
 $PUB_SUBNET2 = (aws ec2 create-subnet `
   --vpc-id $VPC_ID `
-  --cidr-block 10.0.2.0/24 `
+  --cidr-block 192.168.2.0/24 `
   --availability-zone ap-south-2b `
   --query "Subnet.SubnetId" `
   --output text)
@@ -155,7 +155,7 @@ $PUB_SUBNET2 = (aws ec2 create-subnet `
 # ✅ Private Subnet 1
 $PRI_SUBNET1 = (aws ec2 create-subnet `
   --vpc-id $VPC_ID `
-  --cidr-block 10.0.3.0/24 `
+  --cidr-block 192.168.3.0/24 `
   --availability-zone ap-south-2a `
   --query "Subnet.SubnetId" `
   --output text)
@@ -168,7 +168,7 @@ $PRI_SUBNET1 = (aws ec2 create-subnet `
 # ✅ Private Subnet 2
 $PRI_SUBNET2 = (aws ec2 create-subnet `
   --vpc-id $VPC_ID `
-  --cidr-block 10.0.4.0/24 `
+  --cidr-block 192.168.4.0/24 `
   --availability-zone ap-south-2b `
   --query "Subnet.SubnetId" `
   --output text)
@@ -289,7 +289,7 @@ Write-Host "✅ Security Group Created: $SG_ID_3 (SonarQube Server)"
 
 # Variables
 REGION="ap-south-2"
-VPC_CIDR="10.0.0.0/16"
+VPC_CIDR="192.168.0.0/16"
 VPC_NAME="Jenkins-EKS"
 ECR_APP_NAME="secureshop"
 AWS_ACCOUNT_ID="870150365165"
@@ -312,7 +312,7 @@ echo "✅ VPC Created: $VPC_ID"
 
 PUB_SUBNET1=$(aws ec2 create-subnet \
   --vpc-id $VPC_ID \
-  --cidr-block 10.0.1.0/24 \
+  --cidr-block 192.168.1.0/24 \
   --availability-zone ap-south-2a \
   --query 'Subnet.SubnetId' \
   --output text)
@@ -327,7 +327,7 @@ PUB_SUBNET1=$(aws ec2 create-subnet \
 # ✅ Public Subnet 2
 PUB_SUBNET2=$(aws ec2 create-subnet \
   --vpc-id $VPC_ID \
-  --cidr-block 10.0.2.0/24 \
+  --cidr-block 192.168.2.0/24 \
   --availability-zone ap-south-2b \
   --query 'Subnet.SubnetId' \
   --output text)
@@ -342,7 +342,7 @@ PUB_SUBNET2=$(aws ec2 create-subnet \
 # ✅ Private Subnet 1
 PRI_SUBNET1=$(aws ec2 create-subnet \
   --vpc-id $VPC_ID \
-  --cidr-block 10.0.3.0/24 \
+  --cidr-block 192.168.3.0/24 \
   --availability-zone ap-south-2a \
   --query 'Subnet.SubnetId' \
   --output text)
@@ -357,7 +357,7 @@ PRI_SUBNET1=$(aws ec2 create-subnet \
 # ✅ Private Subnet 2
 PRI_SUBNET2=$(aws ec2 create-subnet \
   --vpc-id $VPC_ID \
-  --cidr-block 10.0.4.0/24 \
+  --cidr-block 192.168.4.0/24 \
   --availability-zone ap-south-2b \
   --query 'Subnet.SubnetId' \
   --output text)

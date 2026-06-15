@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "${APP_NAME}"
+  namespace: secureapp
+  labels:
+    app: "${APP_NAME}"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "${APP_NAME}"
+  template:
+    metadata:
+      labels:
+        app: "${APP_NAME}"
+    spec:
+      containers:
+        - name: "${APP_NAME}"
+          image: "${IMAGE_REPO}:${IMAGE_TAG}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8070
+      imagePullSecrets:
+        - name: ecr-secret-registry-key

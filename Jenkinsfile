@@ -7,18 +7,9 @@ pipeline {
     }
 
     environment {
-        // JAVA HOME
-        JAVA_HOME = tool name: 'jdk21', type: 'jdk'
-        PATH = "${JAVA_HOME}/bin:${PATH}"
-    
-        // Tools and integrations
         SCANNER_HOME = tool 'SonarScanner'
         SONARQUBE = credentials('sonar-token')
 
-        // OWASP API KEY
-        NVD_API_KEY = credentials('nvd-api-key')
-
-        // AWS ECR configuration
         AWS_REGION = 'us-east-1'
         AWS_ACCOUNT_ID = '822654906952'
         ECR_REPO_URL = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
@@ -26,44 +17,42 @@ pipeline {
         IMAGE_REPO = "${ECR_REPO_URL}/${ECR_APP_NAME}"
         IMAGE_TAG = "${BUILD_NUMBER}"
 
-        // Application name
         APP_NAME = 'SecureShop'
     }
 
     stages {
 
         stage('Git Checkout') {
-    steps {
-        checkout([$class: 'GitSCM',
-            branches: [[name: 'main']],
-            userRemoteConfigs: [[
-                url: 'https://github.com/sudhancicd/secure-shop-devsecops.git',
-                credentialsId: 'github-ssh-key'
-            ]]
-        ])
-    }
-}
-
+            steps {
+                checkout([$class: 'GitSCM',
+                    branches: [[name: 'main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/meprana14-cell/SecureShop-DevSecOps.git',
+                        credentialsId: 'GITPRIVATE_Key'
+                    ]]
+                ])
+            }
+        }
 
         stage('Compile Source Code') {
             steps {
-                echo '🔧 Compiling Source code...'
+                echo 'Compiling Source code...'
                 sh 'mvn compile'
             }
         }
 
         stage('Unit Test') {
             steps {
-                echo '🧪 Running Unit Tests...'
+                echo 'Running Unit Tests...'
                 sh 'mvn test -DskipTests=true'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                echo '🧩 Running SonarQube Code Analysis...'
+                echo 'Running SonarQube Code Analysis...'
                 script {
-                    withSonarQubeEnv('SonarQube') {
+                    withSonarQubeEnv('Sonar_Cube_Server') {
                         sh '''
                             ${SCANNER_HOME}/bin/sonar-scanner \
                                 -Dsonar.projectKey=SecureShop \
@@ -72,23 +61,24 @@ pipeline {
                                 -Dsonar.sources=src \
                                 -Dsonar.java.binaries=target/classes \
                                 -Dsonar.sourceEncoding=UTF-8 \
-                                -Dsonar.host.url=http://98.84.135.194:9000 \
+                                -Dsonar.host.url=http://16.112.129.94:9000 \
                                 -Dsonar.login=$SONARQUBE
                         '''
                     }
                 }
             }
         }
-                stage('Build Source Code') {
-                    steps {
-                        echo '⚙️ Packaging Source Code...'
-                        sh 'mvn package -DskipTests=true'
-                    }
-                }
+
+        stage('Build Source Code') {
+            steps {
+                echo 'Packaging Source Code...'
+                sh 'mvn package -DskipTests=true'
+            }
+        }
 
         stage('Artifact storing in Nexus') {
             steps {
-                echo '📦 Publishing Artifact to Nexus Repository...'
+                echo 'Publishing Artifact to Nexus Repository...'
                 script {
                     withMaven(
                         globalMavenSettingsConfig: 'global-maven-settings',
@@ -105,11 +95,10 @@ pipeline {
         stage('Build Container Image & Push to ECR') {
             steps {
                 script {
-                    // Set IMAGE_TAG inside script block using Jenkins BUILD_NUMBER
                     IMAGE_TAG = "${BUILD_NUMBER ?: 'latest'}"
                     echo "Building Docker image: ${IMAGE_REPO}:${IMAGE_TAG}"
 
-                    withAWS(region: "${AWS_REGION}", credentials: 'aws-creds') {
+                    withAWS(region: "${AWS_REGION}", credentials: 'AWS_Credentials') {
                         sh """
                             aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URL}
                             docker build -t ${ECR_APP_NAME}:${IMAGE_TAG} .
@@ -125,77 +114,63 @@ pipeline {
         stage('Trivy Image Scan') {
             steps {
                 script {
-                    echo '🔍 Scanning Docker image with Trivy...'
+                    echo 'Scanning Docker image with Trivy...'
                     sh """
                         trivy image --exit-code 0 --severity HIGH,CRITICAL ${IMAGE_REPO}:${IMAGE_TAG} > trivy-report.txt
                         trivy image --exit-code 1 --severity CRITICAL ${IMAGE_REPO}:${IMAGE_TAG} >> trivy-report.txt || true
                     """
                     archiveArtifacts artifacts: 'trivy-report.txt', allowEmptyArchive: true
-                    echo '✅ Trivy scan completed and report archived.'
+                    echo 'Trivy scan completed and report archived.'
                 }
             }
         }
 
-stage('K8S Deploy') {
-    steps {
-        script {
-            // Set environment variables for deployment
-            def appName = 'secureshop'
-            def awsRegion = 'us-east-1'
-            def awsAccount = '822654906952'
-            def imageRepo = "${awsAccount}.dkr.ecr.${awsRegion}.amazonaws.com/${appName}"
-            def imageTag = "${BUILD_NUMBER ?: 'latest'}"
+        stage('K8S Deploy') {
+            steps {
+                script {
+                    def appName = 'secureshop'
+                    def awsRegion = 'us-east-1'
+                    def awsAccount = '822654906952'
+                    def imageRepo = "${awsAccount}.dkr.ecr.${awsRegion}.amazonaws.com/${appName}"
+                    def imageTag = "${BUILD_NUMBER ?: 'latest'}"
 
-                // Export variables for envsubst
-                sh """
-                    export APP_NAME=${appName}
-                    export IMAGE_REPO=${imageRepo}
-                    export IMAGE_TAG=${imageTag}
+                    sh """
+                        export APP_NAME=${appName}
+                        export IMAGE_REPO=${imageRepo}
+                        export IMAGE_TAG=${imageTag}
 
-                    # Delete old resources
-                    kubectl delete deployment secureshop -n secureapp --ignore-not-found
-                    kubectl delete deployment secure-shop -n secureapp --ignore-not-found
-                    kubectl delete svc secureshop-service -n secureapp --ignore-not-found
-                    kubectl delete svc secure-shop-service -n secureapp --ignore-not-found
+                        kubectl delete deployment secureshop -n secureapp --ignore-not-found
+                        kubectl delete deployment secure-shop -n secureapp --ignore-not-found
+                        kubectl delete svc secureshop-service -n secureapp --ignore-not-found
+                        kubectl delete svc secure-shop-service -n secureapp --ignore-not-found
 
-                    # Generate processed YAML files
-                    envsubst < kubernetes/deployment.yaml > /var/lib/jenkins/deployment-processed.yaml
-                    envsubst < kubernetes/service.yaml > /var/lib/jenkins/service-processed.yaml
-                
-                    # Apply to Kubernetes
-                    kubectl apply -f /var/lib/jenkins/deployment-processed.yaml
-                    kubectl apply -f /var/lib/jenkins/service-processed.yaml
+                        envsubst < kubernetes/deployment.yaml > /var/lib/jenkins/deployment-processed.yaml
+                        envsubst < kubernetes/service.yaml > /var/lib/jenkins/service-processed.yaml
 
-                    # Wait for rollout to finish
-                    kubectl rollout status deployment/secureshop -n secureapp --timeout=120s
-                    kubectl get svc -n secureapp
-                """
+                        kubectl apply -f /var/lib/jenkins/deployment-processed.yaml
+                        kubectl apply -f /var/lib/jenkins/service-processed.yaml
+
+                        kubectl rollout status deployment/secureshop -n secureapp --timeout=120s
+                        kubectl get svc -n secureapp
+                    """
+                }
             }
         }
-    }
-
 
         stage('Commit Version Update') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'github-ssh-token', variable: 'GITHUB_TOKEN')]) { // Replace with the ID of the GitHub token credentials
-                        sh 'git config user.email "sudhan@ci-cd.org"'
-                        sh 'git config user.name "sudhancicd"'
-						
-						// Replace with the URL of your Git repository
-                        sh "git remote set-url origin https://$GITHUB_TOKEN:x-oauth-basic@github.com/sudhancicd/secure-shop-devsecops.git" 
-						
-						//Clean workspace before rebase
-						sh 'git reset --hard'
-						sh 'git clean -fd'
-						sh 'git fetch origin main'
+                    withCredentials([string(credentialsId: 'GITHUB_Token', variable: 'GITHUB_TOKEN')]) {
+                        sh 'git config user.email "meprana14@gmail.com"'
+                        sh 'git config user.name "meprana14-cell"'
+                        sh "git remote set-url origin https://$GITHUB_TOKEN:x-oauth-basic@github.com/meprana14-cell/SecureShop-DevSecOps.git"
+                        sh 'git reset --hard'
+                        sh 'git clean -fd'
+                        sh 'git fetch origin main'
                         sh 'git pull --rebase origin main'
                         sh 'git add .'
                         sh 'git commit -m "ci: version bump [skip ci]" || echo "No changes to commit"'
                         sh 'git push origin HEAD:main'
-						sh 'git config user.email "sudhan@ci-cd.org"'
-
-
                     }
                 }
             }
